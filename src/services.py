@@ -43,7 +43,7 @@ async def parse_product_card(driver):
 
     for name, price, discount, link in zip(name, old_price, discount_val, detail_link):
         name = name.text
-        price = price.text[14:]
+        price = price.text
         discount = discount.text
         link = link.get_attribute('href')
 
