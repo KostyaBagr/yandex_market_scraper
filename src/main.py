@@ -17,7 +17,7 @@ from crud import add_link_to_db, get_links_list
 async def parse_products(links) -> None:
     """Ф-ция выполняет сам парсинг страницы, используя driver"""
     driver = await driver_config()
-    # &promo-type-filter=discount
+
     try:
 
         for link_obj in links:
@@ -62,7 +62,7 @@ async def get_link_and_discount_from_user():
 async def main():
     """Точка входа"""
     try:
-        #await products_finder()
+        # await products_finder()
         await get_link_and_discount_from_user()
     except Exception as e:
         print(e)
