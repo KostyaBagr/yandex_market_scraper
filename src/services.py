@@ -1,10 +1,14 @@
 import time
+import re
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from fake_useragent import UserAgent
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 import asyncio
+
+from src.crud import add_product_to_db
+
 
 async def driver_config():
     """WebDriver config"""
@@ -21,17 +25,36 @@ async def driver_config():
 
 async def solve_captcha(driver):
     """Ф-ция решает капчу на сайте"""
-    await asyncio.sleep(2)  # Добавим задержку перед началом работы
-    iframe = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'iframe')))
-    print(iframe, 'iframe')
-    # Переключаемся на iframe
-    driver.switch_to.frame(iframe)
+    wait = WebDriverWait(driver, 10)
+    try:
+        is_captcha = wait.until(EC.presence_of_element_located((By.ID, 'js-button'))).click()
+        await asyncio.sleep(5)
+        return True
+    except Exception as e:
+        return False
 
-    # Находим чекбокс капчи и кликаем на него
-    checkbox = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#checkbox')))
-    print(checkbox, 'checkbox')
-    checkbox.click()
 
-    # Ждем, пока капча обработается
-    await asyncio.sleep(5)
-    print("Капча решена успешно!")
+async def parse_product_card(driver):
+    """Ф-ция забирает данные с карточки товара"""
+    name = driver.find_elements(By.CLASS_NAME, '_1E10J')
+    old_price = driver.find_elements(By.CLASS_NAME, '_8-sD9')
+    discount_val = driver.find_elements(By.CLASS_NAME, '_3ZKoP')
+    detail_link = driver.find_elements(By.CLASS_NAME, 'egKyN')
+
+    for name, price, discount, link in zip(name, old_price, discount_val, detail_link):
+        name = name.text
+        price = price.text[14:]
+        discount = discount.text
+        link = link.get_attribute('href')
+
+        regex = re.compile('[^0-9]')
+        price = regex.sub('', price)
+        discount = regex.sub('', discount)
+
+        data = {
+            "name": name,
+            "link": link,
+            "price": price,
+            "discount": discount
+        }
+        await add_product_to_db(data)

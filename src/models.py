@@ -18,7 +18,9 @@ class Product(Base):
     __tablename__ = 'products'
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False)
     link = Column(String, nullable=False)
     price = Column(String, nullable=True)
+    discount = Column(Integer, nullable=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 

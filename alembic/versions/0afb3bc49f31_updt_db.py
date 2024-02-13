@@ -1,8 +1,8 @@
-"""Crated DB: Links and Product table
+"""UPDT DB
 
-Revision ID: ec0d52c4a58b
+Revision ID: 0afb3bc49f31
 Revises: 
-Create Date: 2024-02-12 17:53:52.524896
+Create Date: 2024-02-13 22:34:38.623948
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ec0d52c4a58b'
+revision: str = '0afb3bc49f31'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,8 +29,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_links_id'), 'links', ['id'], unique=False)
     op.create_table('products',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
     sa.Column('link', sa.String(), nullable=False),
     sa.Column('price', sa.String(), nullable=True),
+    sa.Column('discount', sa.Integer(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
