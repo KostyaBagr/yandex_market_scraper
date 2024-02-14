@@ -1,43 +1,31 @@
-import requests
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium import webdriver
-from fake_useragent import UserAgent
 import time
 import asyncio
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from sqlalchemy import Sequence, Row, RowMapping
-from typing_extensions import Any
 
-from services import driver_config, solve_captcha, parse_product_card
-from crud import add_link_to_db, get_links_list
+from services import driver_config, solve_captcha, parse_product_card, is_link_correct
+from crud import get_links_list, get_or_create
+from src.models import Link
 
 
-async def parse_products(links) -> None:
+async def parse_products() -> None:
     """Ф-ция выполняет сам парсинг страницы, используя driver"""
     driver = await driver_config()
-
+    links = await get_links_list()
     try:
 
         for link_obj in links:
             driver.get(f"{link_obj.link}&promo-type-filter=discount")
-            await solve_captcha(driver)
-            await parse_product_card(driver)
 
+            # is_correct = await is_link_correct(driver)
+
+            await solve_captcha(driver)
+            await parse_product_card(driver, link_obj.discount)
 
     except Exception as ex:
         print(ex)
     finally:
         driver.close()
         driver.quit()
-
-
-async def products_finder():
-    """Ф-ция вызывает ф-цию get_links_list для получения ссылок и далее вызывает ф-цию parse_products для парсинга карточек товара"""
-    links = await get_links_list()
-    print(links)
-    products = await parse_products(links)
 
 
 async def get_link_and_discount_from_user():
@@ -47,7 +35,7 @@ async def get_link_and_discount_from_user():
         link = input("Введите ссылку (или 'exit' для завершения): ")
 
         if link.lower() == 'exit':
-            await products_finder()
+            await parse_products()
             break
 
         discount = input("Введите процент скидки: ")
@@ -56,14 +44,15 @@ async def get_link_and_discount_from_user():
         except ValueError:
             print("Ошибка: процент скидки должен быть числом.")
             continue
-        await add_link_to_db(link=link, discount=discount)
+
+        await get_or_create(model=Link, link=link, discount=discount)
 
 
 async def main():
     """Точка входа"""
     try:
-        # await products_finder()
-        await get_link_and_discount_from_user()
+        await parse_products()
+        # await get_link_and_discount_from_user()
     except Exception as e:
         print(e)
 
