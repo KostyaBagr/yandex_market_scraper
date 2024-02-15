@@ -1,15 +1,14 @@
 import time
 import re
 import asyncio
-
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
 from fake_useragent import UserAgent
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-
+from selenium.webdriver.common.action_chains import ActionChains
 from src.crud import get_or_create_product
-from src.main import parse_products
 
 
 async def driver_config():
@@ -41,13 +40,10 @@ async def solve_captcha(driver: webdriver):
 async def parse_product_card(driver: webdriver, link_discount: int):
     """Ф-ция забирает данные с карточки товара"""
 
-    pagination = driver.find_element(By.CLASS_NAME, 'B-RPM')
 
-    max_tab = max([int(char) for char in pagination.text if char.isdigit()])
-    curr_tab = 1
 
-    while curr_tab <= max_tab:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    while True:
+    # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         await asyncio.sleep(2)
 
@@ -73,14 +69,19 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                     "price": price,
                     "discount": discount
                 }
-                print('скидка похдодит ')
+                print(f'скидка похдодит товар - {name}')
                 await get_or_create_product(product_price=int(price), data=data)
                 # await add_product_to_db(data) #refactor: вместо добавления я должен получать ИЛИ добавлять
+        try:
+            pagination = driver.find_element(By.XPATH, '/html/body/div[1]/div/div[4]/div/div/div[1]/div/div/div[5]/div/div/div/div/div/div/div/div[7]/div/div/div[1]/div/button')
+            print(pagination.text, 'pagination')
+            actions = ActionChains(driver)
+            actions.move_to_element(pagination).click().perform()
+        except NoSuchElementException:
+            print("Достигнут конец товаров")
+            break
 
-        curr_tab += 1
 
-        # if driver.find_element(By.CLASS_NAME, '_2fBJ5'):
-        #     break
 
 
 async def is_link_correct(driver: webdriver):

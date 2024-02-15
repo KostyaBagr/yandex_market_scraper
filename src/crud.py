@@ -58,7 +58,7 @@ async def get_or_create_product(product_price: int, data: dict):
         product_instance = instance.scalars().first()
         if product_instance:
 
-            if product_instance.price > product_price:   # сравниваю текущую цену и цену из бд
+            if int(product_instance.price) > product_price:   # сравниваю текущую цену и цену из бд
                 product_instance.price = product_price
                 await session.commit()
                 await send_tg_message(product_instance)

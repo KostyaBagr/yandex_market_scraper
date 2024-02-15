@@ -1,6 +1,5 @@
-import time
+
 import asyncio
-from selenium.webdriver.common.by import By
 
 from services import driver_config, solve_captcha, parse_product_card, is_link_correct
 from crud import get_links_list, get_or_create
