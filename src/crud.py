@@ -53,11 +53,12 @@ async def get_or_create_product(product_price: int, data: dict):
     """Ф-ция получает или добавляет товар в БД. Если товар есть в бд, то сравнивается его актуальная цена и цена из БД
         -product_price - актуальная цена товара с сайта
     """
+
     async with AsyncSession(bind=engine) as session:
         instance = await session.execute(select(Product).filter_by(**data))
         product_instance = instance.scalars().first()
-        if product_instance:
 
+        if product_instance:
             if int(product_instance.price) > product_price:   # сравниваю текущую цену и цену из бд
                 product_instance.price = product_price
                 await session.commit()

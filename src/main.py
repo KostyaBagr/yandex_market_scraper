@@ -13,7 +13,8 @@ async def parse_products() -> None:
     try:
 
         for link_obj in links:
-            driver.get(f"{link_obj.link}&promo-type-filter=discount")
+            #driver.get(f"{link_obj.link}&promo-type-filter=cheapest-as-gift")
+            driver.get(f"{link_obj.link}&promo-type-filter=discount%2Ccheapest-as-gift")
 
             # is_correct = await is_link_correct(driver)
 
@@ -51,7 +52,7 @@ async def main():
     """Точка входа"""
     try:
         await parse_products()
-        # await get_link_and_discount_from_user()
+        #await get_link_and_discount_from_user()
     except Exception as e:
         print(e)
 
