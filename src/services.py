@@ -2,6 +2,7 @@ import time
 import re
 from collections import namedtuple
 import asyncio
+from itertools import zip_longest
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
@@ -52,16 +53,23 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                                                                                              '[data-auto="price-value"]')
         discount_values = driver.find_elements(By.CLASS_NAME, '_3ZKoP')
         detail_links = driver.find_elements(By.CLASS_NAME, 'egKyN')
-        #romotions = driver.find_elements(By.CLASS_NAME, 'ko6OZ')
+        promotions = driver.find_elements(By.CLASS_NAME, 'ko6OZ')
+        promocodes = driver.find_elements(By.CLASS_NAME, '_2X3hM')
 
-        for name, price, discount, link in zip(names, green_prices, discount_values, detail_links):
-            name = name.text
-            price = price.text
-            discount = discount.text
-            link = link.get_attribute('href')
 
-            promotions = [i.text for i in driver.find_elements(By.CLASS_NAME, 'ko6OZ')]
+        for name, price, discount, link, promotion, promocode in zip_longest(names, green_prices, discount_values, detail_links, promotions, promocodes):
+            try:
+                name = name.text
+                price = price.text
+                discount = discount.text
+                link = link.get_attribute('href')
+                promotion_text = promotion.text if promotion is not None else None
+                promocode_text = promocode.text if promocode is not None else None
+            except AttributeError as e:
+                #print(e)
+                continue
 
+            print(promotion_text, promocode_text)
             regex = re.compile('[^0-9]')
             price = regex.sub('', price)
             discount = regex.sub('', discount)
@@ -76,10 +84,11 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                 print(f'скидка похдодит товар - {name}')
                 await get_or_create_product(product_price=int(price), data=data)
                 # await add_product_to_db(data) #refactor: вместо добавления я должен получать ИЛИ добавлять
+
         try:
             pagination = driver.find_element(By.XPATH,
                                              '/html/body/div[1]/div/div[4]/div/div/div[1]/div/div/div[5]/div/div/div/div/div/div/div/div[7]/div/div/div[1]/div/button')
-            print(pagination.text, 'pagination')
+            #print(pagination.text, 'pagination')
             actions = ActionChains(driver)
             actions.move_to_element(pagination).click().perform()
         except NoSuchElementException:

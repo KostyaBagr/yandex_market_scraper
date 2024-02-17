@@ -22,5 +22,7 @@ class Product(Base):
     link = Column(String, nullable=False)
     price = Column(String, nullable=True)
     discount = Column(Integer, nullable=True)
+    promotion = Column(String, nullable=True)
+    promocode = Column(String, nullable=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 

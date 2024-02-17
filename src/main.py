@@ -14,7 +14,7 @@ async def parse_products() -> None:
 
         for link_obj in links:
             #driver.get(f"{link_obj.link}&promo-type-filter=cheapest-as-gift")
-            driver.get(f"{link_obj.link}&promo-type-filter=discount%2Ccheapest-as-gift")
+            driver.get(f"{link_obj.link}&promo-type-filter=discount%2Cpromo-code%2Ccheapest-as-gift")
 
             # is_correct = await is_link_correct(driver)
 
