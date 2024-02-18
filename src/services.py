@@ -47,43 +47,59 @@ async def parse_product_card(driver: webdriver, link_discount: int):
         await asyncio.sleep(2)
 
         product_blocks = driver.find_elements(By.CLASS_NAME, '_3yjG2')
-        print(product_blocks)
+
         for product_block in product_blocks:
+            link = None
+            name = None
+            green_price = None
+            red_price = None
+            discount = None
+            promotion = None
+            promocode = None
+
             try:
-                # Получаем ссылку из названия товара
+                if product_block.find_elements(By.CLASS_NAME, '_3SIKw'):
+                    promotion = product_block.find_element(By.CLASS_NAME, '_3SIKw').text.strip()
+                    red_price = product_block.find_element(By.CSS_SELECTOR, '[data-auto="price-value"]').text.strip()
+                    discount = product_block.find_element(By.CLASS_NAME, '_1oI3I').text.strip()
+                else:
+                    if product_block.find_element(By.CLASS_NAME, '_1stjo'):
+                        green_price = product_block.find_element(By.CLASS_NAME, '_1stjo').text.strip()
+                    if product_block.find_element(By.CLASS_NAME, '_3ZKoP'):
+                        discount = product_block.find_element(By.CLASS_NAME, '_3ZKoP').text.strip()
+            except Exception as e:
+                print(e)
+                continue
+
+            if product_block.find_element(By.TAG_NAME, 'a'):
                 link = product_block.find_element(By.TAG_NAME, 'a').get_attribute('href')
-                print(link)
+
+            if product_block.find_element(By.CLASS_NAME, '_1E10J'):
                 name = product_block.find_element(By.CLASS_NAME, '_1E10J').text.strip()
-                print(name)
-                green_price = product_block.find_element(By.CLASS_NAME, '_1stjo').text.strip()
-                print(green_price)
-                discount = product_block.find_element(By.CLASS_NAME, '_3ZKoP').text.strip()
-                print(discount)
-                promotion = product_block.find_element(By.CLASS_NAME, 'ko6OZ').text.strip()
-                print(promotion)
+
+            if product_block.find_elements(By.CLASS_NAME, '_2X3hM'):
                 promocode = product_block.find_element(By.CLASS_NAME, '_2X3hM').text.strip()
-                print(promocode)
-            except NoSuchElementException:
-                pass
-            # Определяем регулярное выражение для извлечения числовых значений
-            # regex = re.compile('[^0-9]')
-            # green_price = regex.sub('', green_price)
-            # discount = regex.sub('', discount)
+
+
+            regex = re.compile('[^0-9]')
+            green_price = regex.sub('', green_price) if green_price else None
+            discount = regex.sub('', discount)
+            red_price = regex.sub('', red_price) if red_price else None
+
+            print(name, discount, 'ww')
             #
-            # if int(discount) >= link_discount:  # Если скидка соответствует критериям
-            #     data = {
-            #         "name": name,
-            #         "green_price": green_price,
-            #         "discount": discount,
-            #         "red_price": "",
-            #         "link": link,  # Используем полученную ссылку
-            #         "promotion": promotion,
-            #         "promocode": promocode
-            #     }
-            #     print(data)
-            #     await get_or_create_product(data=data)
-
-
+            if int(discount) >= link_discount:  # Если скидка соответствует критериям
+                data = {
+                    "name": name,
+                    "green_price": green_price,
+                    "discount": discount,
+                    "red_price": red_price,
+                    "link": link,
+                    "promotion": promotion,
+                    "promocode": promocode
+                }
+                print("Скидка подходит")
+                await get_or_create_product(data=data)
 
         try:
             pagination = driver.find_element(By.XPATH,
