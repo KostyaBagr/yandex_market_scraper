@@ -44,53 +44,53 @@ async def parse_product_card(driver: webdriver, link_discount: int):
     """Ф-ция забирает данные с карточки товара"""
 
     while True:
-        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
         await asyncio.sleep(2)
 
-        names = driver.find_elements(By.CLASS_NAME, '_1E10J')
-        green_prices = driver.find_elements(By.CLASS_NAME, '_1stjo') or driver.find_elements(By.CSS_SELECTOR,
-                                                                                             '[data-auto="price-value"]')
-        discount_values = driver.find_elements(By.CLASS_NAME, '_3ZKoP')
-        detail_links = driver.find_elements(By.CLASS_NAME, 'egKyN')
-        promotions = driver.find_elements(By.CLASS_NAME, 'ko6OZ')
-        promocodes = driver.find_elements(By.CLASS_NAME, '_2X3hM')
-
-
-        for name, price, discount, link, promotion, promocode in zip_longest(names, green_prices, discount_values, detail_links, promotions, promocodes):
+        product_blocks = driver.find_elements(By.CLASS_NAME, '_3yjG2')
+        print(product_blocks)
+        for product_block in product_blocks:
             try:
-                name = name.text
-                price = price.text
-                discount = discount.text
-                link = link.get_attribute('href')
-                promotion_text = promotion.text if promotion is not None else None
-                promocode_text = promocode.text if promocode is not None else None
-            except AttributeError as e:
-                #print(e)
-                continue
+                # Получаем ссылку из названия товара
+                link = product_block.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                print(link)
+                name = product_block.find_element(By.CLASS_NAME, '_1E10J').text.strip()
+                print(name)
+                green_price = product_block.find_element(By.CLASS_NAME, '_1stjo').text.strip()
+                print(green_price)
+                discount = product_block.find_element(By.CLASS_NAME, '_3ZKoP').text.strip()
+                print(discount)
+                promotion = product_block.find_element(By.CLASS_NAME, 'ko6OZ').text.strip()
+                print(promotion)
+                promocode = product_block.find_element(By.CLASS_NAME, '_2X3hM').text.strip()
+                print(promocode)
+            except NoSuchElementException:
+                pass
+            # Определяем регулярное выражение для извлечения числовых значений
+            # regex = re.compile('[^0-9]')
+            # green_price = regex.sub('', green_price)
+            # discount = regex.sub('', discount)
+            #
+            # if int(discount) >= link_discount:  # Если скидка соответствует критериям
+            #     data = {
+            #         "name": name,
+            #         "green_price": green_price,
+            #         "discount": discount,
+            #         "red_price": "",
+            #         "link": link,  # Используем полученную ссылку
+            #         "promotion": promotion,
+            #         "promocode": promocode
+            #     }
+            #     print(data)
+            #     await get_or_create_product(data=data)
 
-            print(promotion_text, promocode_text)
-            regex = re.compile('[^0-9]')
-            price = regex.sub('', price)
-            discount = regex.sub('', discount)
 
-            if int(discount) >= link_discount:  # если скидка у товара больше, либо равняется скидке, указанной в ссылке, то сохраняем в бд
-                data = {
-                    "name": name,
-                    "link": link,
-                    "price": price,
-                    "discount": discount
-                }
-                print(f'скидка похдодит товар - {name}')
-                await get_or_create_product(product_price=int(price), data=data)
-                # await add_product_to_db(data) #refactor: вместо добавления я должен получать ИЛИ добавлять
 
         try:
             pagination = driver.find_element(By.XPATH,
                                              '/html/body/div[1]/div/div[4]/div/div/div[1]/div/div/div[5]/div/div/div/div/div/div/div/div[7]/div/div/div[1]/div/button')
-            #print(pagination.text, 'pagination')
             actions = ActionChains(driver)
             actions.move_to_element(pagination).click().perform()
+            await asyncio.sleep(2)
         except NoSuchElementException:
             print("Достигнут конец товаров")
             break
@@ -105,3 +105,13 @@ async def is_link_correct(driver: webdriver):
 
     except Exception as ex:
         return False
+
+
+async def calculate_final_price(data: dict):
+    # data = price, promotion (2=1)=None, promocode(-20%)=None
+    price = int(data['price'])
+
+    promotion_price = (price * data['promotion'][1]) // data['promotion'][0] if data['promotion'] else None
+    promocode_price = price - ((data['promocode'] / 100) * price) if data['promocode'] else None
+    total_price = price - (promocode_price + promotion_price)
+    total_percent = (total_price // price) * 100

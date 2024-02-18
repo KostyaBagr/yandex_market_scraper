@@ -6,7 +6,7 @@ from database_conf import engine
 from models import Link, Product
 
 
-async def get_or_create(model, **kwargs) ->  Row | RowMapping :
+async def get_or_create(model, **kwargs) -> Row | RowMapping:
     """GET or CREATE func"""
 
     async with AsyncSession(bind=engine) as session:
@@ -46,26 +46,28 @@ async def add_product_to_db(data: dict) -> None:
 
 
 async def send_tg_message(product):
+    # print(product)
     pass
 
 
-async def get_or_create_product(product_price: int, data: dict):
+async def get_or_create_product(data: dict):
     """Ф-ция получает или добавляет товар в БД. Если товар есть в бд, то сравнивается его актуальная цена и цена из БД
-        -product_price - актуальная цена товара с сайта
     """
 
     async with AsyncSession(bind=engine) as session:
         instance = await session.execute(select(Product).filter_by(**data))
         product_instance = instance.scalars().first()
+        # curr_price = int(data['price']) # - data['price'] - актуальная цена товара с сайта
 
         if product_instance:
-            if int(product_instance.price) > product_price:   # сравниваю текущую цену и цену из бд
-                product_instance.price = product_price
-                await session.commit()
-                await send_tg_message(product_instance)
+            pass
+            # if int(product_instance.green_price) > curr_price:
+            #     product_instance.price = curr_price
+            #     await session.commit()
+            #     await send_tg_message(product_instance)
 
         else:
             product_instance = Product(**data)
             session.add(product_instance)
             await session.commit()
-
+            await send_tg_message(product_instance)

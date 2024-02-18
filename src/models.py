@@ -18,9 +18,10 @@ class Product(Base):
     __tablename__ = 'products'
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    link = Column(String, nullable=False)
-    price = Column(String, nullable=True)
+    name = Column(String, nullable=True)
+    link = Column(String, nullable=True)
+    green_price = Column(String, nullable=True)
+    red_price = Column(String, nullable=True)
     discount = Column(Integer, nullable=True)
     promotion = Column(String, nullable=True)
     promocode = Column(String, nullable=True)
