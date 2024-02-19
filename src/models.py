@@ -20,10 +20,8 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=True)
     link = Column(String, nullable=True)
-    green_price = Column(String, nullable=True)
-    red_price = Column(String, nullable=True)
-    discount = Column(Integer, nullable=True)
-    promotion = Column(String, nullable=True)
-    promocode = Column(String, nullable=True)
+    price = Column(Integer, nullable=True)  # 249
+    discount = Column(Integer, nullable=True)  # 15
+    promotion = Column(String, nullable=True)  # 32, т.е. акция 3=2
+    promocode = Column(Integer, nullable=True) # 20, т.е. промокод -20%
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
-

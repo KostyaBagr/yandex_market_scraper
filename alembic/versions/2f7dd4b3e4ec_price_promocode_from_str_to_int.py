@@ -1,8 +1,8 @@
-"""added red_price
+"""price, promocode from str to int
 
-Revision ID: 1da07e22c701
+Revision ID: 2f7dd4b3e4ec
 Revises: 
-Create Date: 2024-02-18 16:10:11.657690
+Create Date: 2024-02-19 21:00:44.932415
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1da07e22c701'
+revision: str = '2f7dd4b3e4ec'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,11 +31,10 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('link', sa.String(), nullable=True),
-    sa.Column('green_price', sa.String(), nullable=True),
-    sa.Column('red_price', sa.String(), nullable=True),
+    sa.Column('price', sa.Integer(), nullable=True),
     sa.Column('discount', sa.Integer(), nullable=True),
     sa.Column('promotion', sa.String(), nullable=True),
-    sa.Column('promocode', sa.String(), nullable=True),
+    sa.Column('promocode', sa.Integer(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

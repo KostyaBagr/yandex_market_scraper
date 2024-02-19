@@ -45,11 +45,6 @@ async def add_product_to_db(data: dict) -> None:
         await session.refresh(db_prod)
 
 
-async def send_tg_message(product):
-    # print(product)
-    pass
-
-
 async def get_or_create_product(data: dict):
     """Ф-ция получает или добавляет товар в БД. Если товар есть в бд, то сравнивается его актуальная цена и цена из БД
     """
@@ -57,17 +52,18 @@ async def get_or_create_product(data: dict):
     async with AsyncSession(bind=engine) as session:
         instance = await session.execute(select(Product).filter_by(**data))
         product_instance = instance.scalars().first()
-        # curr_price = int(data['price']) # - data['price'] - актуальная цена товара с сайта
+        curr_price = data.get('price')  # - data['price'] - актуальная цена товара с сайта
 
-        if product_instance:
-            pass
-            # if int(product_instance.green_price) > curr_price:
-            #     product_instance.price = curr_price
-            #     await session.commit()
-            #     await send_tg_message(product_instance)
+        if product_instance and curr_price:
+            if product_instance.price > curr_price:
+                product_instance.price = curr_price
+                await session.commit()
+                return True
+            print("False from crud")
+            return False
 
         else:
             product_instance = Product(**data)
             session.add(product_instance)
             await session.commit()
-            await send_tg_message(product_instance)
+            return True
