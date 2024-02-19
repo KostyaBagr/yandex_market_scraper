@@ -96,8 +96,7 @@ async def parse_product_card(driver: webdriver, link_discount: int):
 
                 if await get_or_create_product(data=data):
                     await send_tg_message(data)
-                else:
-                    print('CRUD вернуло False')
+
 
         try:
             pagination = driver.find_element(By.XPATH,

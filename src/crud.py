@@ -59,7 +59,6 @@ async def get_or_create_product(data: dict):
                 product_instance.price = curr_price
                 await session.commit()
                 return True
-            print("False from crud")
             return False
 
         else:
