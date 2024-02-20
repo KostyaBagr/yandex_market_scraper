@@ -1,31 +1,36 @@
-
 import asyncio
 
-from services import driver_config, solve_captcha, parse_product_card, is_link_correct
+from services import driver_config, solve_captcha, parse_product_card
 from crud import get_links_list, get_or_create
 from src.models import Link
 
 
 async def parse_products() -> None:
     """Ф-ция выполняет сам парсинг страницы, используя driver"""
-    driver = await driver_config()
-    links = await get_links_list()
-    try:
 
-        for link_obj in links:
-            #driver.get(f"{link_obj.link}&promo-type-filter=cheapest-as-gift")
-            driver.get(f"{link_obj.link}&promo-type-filter=discount%2Cpromo-code%2Ccheapest-as-gift")
+    while True:
 
-            # is_correct = await is_link_correct(driver)
+        print('парсер просыпатся')
+        driver = await driver_config()
+        links = await get_links_list()
+        try:
 
-            await solve_captcha(driver)
-            await parse_product_card(driver, link_obj.discount)
+            for link_obj in links:
+                # driver.get(f"{link_obj.link}&promo-type-filter=cheapest-as-gift")
+                driver.get(f"{link_obj.link}&promo-type-filter=discount%2Cpromo-code%2Ccheapest-as-gift")
 
-    except Exception as ex:
-        print(ex)
-    finally:
-        driver.close()
-        driver.quit()
+                # is_correct = await is_link_correct(driver)
+
+                await solve_captcha(driver)
+                await parse_product_card(driver, link_obj.discount)
+
+        except Exception as ex:
+            print(ex)
+        finally:
+            driver.close()
+            driver.quit()
+        print('парсер засыпает')
+        await asyncio.sleep(3600)
 
 
 async def get_link_and_discount_from_user():
@@ -35,6 +40,7 @@ async def get_link_and_discount_from_user():
         link = input("Введите ссылку (или 'exit' для завершения): ")
 
         if link.lower() == 'exit':
+            print('Вы вышли из режима добавления ссылок, начинается парсинг')
             await parse_products()
             break
 
@@ -51,8 +57,7 @@ async def get_link_and_discount_from_user():
 async def main():
     """Точка входа"""
     try:
-        await parse_products()
-        #await get_link_and_discount_from_user()
+        await get_link_and_discount_from_user()  # Получаем ссылки от пользователя
     except Exception as e:
         print(e)
 

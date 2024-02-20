@@ -45,16 +45,16 @@ async def add_product_to_db(data: dict) -> None:
         await session.refresh(db_prod)
 
 
-async def get_or_create_product(data: dict):
+async def get_or_create_product(data: dict, name: str):
     """Ф-ция получает или добавляет товар в БД. Если товар есть в бд, то сравнивается его актуальная цена и цена из БД
     """
 
     async with AsyncSession(bind=engine) as session:
-        instance = await session.execute(select(Product).filter_by(**data))
+        instance = await session.execute(select(Product).where(Product.name == name))
         product_instance = instance.scalars().first()
         curr_price = data.get('price')  # - data['price'] - актуальная цена товара с сайта
 
-        if product_instance and curr_price:
+        if product_instance:
             if product_instance.price > curr_price:
                 product_instance.price = curr_price
                 await session.commit()
