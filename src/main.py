@@ -9,8 +9,6 @@ async def parse_products() -> None:
     """Ф-ция выполняет сам парсинг страницы, используя driver"""
 
     while True:
-
-        print('парсер просыпатся')
         driver = await driver_config()
         links = await get_links_list()
         try:
@@ -29,8 +27,6 @@ async def parse_products() -> None:
         finally:
             driver.close()
             driver.quit()
-        print('парсер засыпает')
-        await asyncio.sleep(3600)
 
 
 async def get_link_and_discount_from_user():

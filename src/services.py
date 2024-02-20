@@ -75,7 +75,6 @@ async def parse_product_card(driver: webdriver, link_discount: int):
 
             try:
                 price_element = product_block.find_element(By.CSS_SELECTOR, '[data-auto="price-value"]')
-                print(price_element, 'element')
                 price = price_element.text.strip()
                 discount = product_block.find_element(By.CLASS_NAME, '_1oI3I').text.strip()
             except NoSuchElementException:
