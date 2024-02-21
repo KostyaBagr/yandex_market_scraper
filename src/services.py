@@ -13,7 +13,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 
-
 from src.crud import get_or_create_product
 
 load_dotenv()
@@ -49,10 +48,11 @@ async def solve_captcha(driver: webdriver):
 
 async def send_tg_message(data: dict):
     """Ф-ция формирует уведомление для тг и отправляет в группу, используя api телеграм"""
+    print('tg message!')
     data = await calculate_final_price(data)
     message = f"Цена снизилась!\n\n" \
               f"Название - {data.get('name')}\n" \
-              f"Цена - {data.get('price')}\n" \
+              f"Цена - {data.get('price')} руб\n" \
               f"Акция|Промокод - {data.get('promotion') if data.get('promotion') else 'Акции нет'}|{data.get('promocode') if data.get('promocode') else 'Промокода нет'}\n" \
               f"Окончательный процент скидки - {data.get('total_percent') if data.get('total_percent') else 'Скидка не изменилась'}\n" \
               f"Ссылка - {data.get('link')}"
@@ -71,7 +71,7 @@ async def parse_product_card(driver: webdriver, link_discount: int):
         product_blocks = driver.find_elements(By.CLASS_NAME, '_3yjG2')
 
         for product_block in product_blocks:
-            link = name = discount = promotion = promocode = price = None
+            link = name = promotion = promocode = None
 
             try:
                 price_element = product_block.find_element(By.CSS_SELECTOR, '[data-auto="price-value"]')
@@ -86,6 +86,9 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                     print("Не удалось найти цену и скидку:", e)
                     continue
 
+            if product_block.find_elements(By.CLASS_NAME, '_3SIKw'):
+                promotion = product_block.find_element(By.CLASS_NAME, '_3SIKw').text.strip()
+                print(promotion, 'акция')
             if product_block.find_element(By.TAG_NAME, 'a'):
                 link = product_block.find_element(By.TAG_NAME, 'a').get_attribute('href')
 
