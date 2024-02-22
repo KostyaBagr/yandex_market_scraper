@@ -3,6 +3,7 @@ import aiohttp
 import asyncio
 import os
 import urllib.parse
+import logging
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,6 +18,8 @@ from src.crud import get_or_create_product
 
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO, filename="services.log", format="%(asctime)s %(levelname)s %(message)s")
+
 
 async def driver_config():
     """WebDriver config"""
@@ -30,6 +33,7 @@ async def driver_config():
 
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
+    logging.info('Сформировалсь конфигурация для драйвера')
     return driver
 
 
@@ -39,6 +43,7 @@ async def solve_captcha(driver: webdriver):
     try:
         wait.until(EC.presence_of_element_located((By.ID, 'js-button'))).click()
         await asyncio.sleep(2)
+        logging.info('Капча успешно пройдена')
         print('Капча успешно пройдена')
         return True
     except Exception as e:
@@ -48,7 +53,7 @@ async def solve_captcha(driver: webdriver):
 
 async def send_tg_message(data: dict):
     """Ф-ция формирует уведомление для тг и отправляет в группу, используя api телеграм"""
-    print('tg message!')
+
     data = await calculate_final_price(data)
     message = f"Цена снизилась!\n\n" \
               f"Название - {data.get('name')}\n" \
@@ -61,6 +66,7 @@ async def send_tg_message(data: dict):
     async with aiohttp.ClientSession() as session:
         await session.get(
             f'https://api.telegram.org/bot{os.getenv("BOT_TOKEN")}/sendMessage?chat_id=-100{os.getenv("CHAT_ID")}&text={encoded_message}')
+        logging.info(f'Сообщение с товаром {data.get("name")} отправилось')
 
 
 async def parse_product_card(driver: webdriver, link_discount: int):
@@ -83,12 +89,13 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                     price = price_element.text.strip()
                     discount = product_block.find_element(By.CLASS_NAME, '_3ZKoP').text.strip()
                 except NoSuchElementException as e:
+                    logging.error(e)
                     print("Не удалось найти цену и скидку:", e)
                     continue
 
             if product_block.find_elements(By.CLASS_NAME, '_3SIKw'):
                 promotion = product_block.find_element(By.CLASS_NAME, '_3SIKw').text.strip()
-                print(promotion, 'акция')
+
             if product_block.find_element(By.TAG_NAME, 'a'):
                 link = product_block.find_element(By.TAG_NAME, 'a').get_attribute('href')
 
@@ -113,7 +120,7 @@ async def parse_product_card(driver: webdriver, link_discount: int):
                     "promotion": promotion,
                     "promocode": promocode
                 }
-                print("Скидка подходит")
+                print(f"Скидка для товара {name} подходит")
 
                 if await get_or_create_product(data=data, name=data['name']):
                     await send_tg_message(data)

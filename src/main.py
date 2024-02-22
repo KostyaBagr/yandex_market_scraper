@@ -1,10 +1,13 @@
 import asyncio
+import logging
 
 from services import driver_config, solve_captcha, parse_product_card
 from crud import get_links_list, get_or_create
 from src.models import Link
 
 from multiprocessing import Process, Semaphore
+
+logging.basicConfig(level=logging.INFO, filename="main.log", format="%(asctime)s %(levelname)s %(message)s")
 
 
 async def parse_products(link_obj) -> None:
@@ -18,7 +21,7 @@ async def parse_products(link_obj) -> None:
         await parse_product_card(driver, link_obj.discount)
 
     except Exception as ex:
-        print(ex)
+        logging.error(ex)
     finally:
         driver.close()
         driver.quit()
@@ -58,6 +61,10 @@ async def get_link_and_discount_from_user():
             await multiprocessing_conf()
             break
 
+        if not link.startswith("https://"):
+            print("Вы ввели некорректную ссылку, попробуйте еще раз")
+            continue
+
         discount = input("Введите процент скидки: ")
         try:
             discount = int(discount)
@@ -73,6 +80,7 @@ async def main():
     try:
         await get_link_and_discount_from_user()  # Получаем ссылки от пользователя
     except Exception as e:
+        logging.error(e)
         print(e)
 
 
